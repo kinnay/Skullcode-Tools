@@ -1,0 +1,52 @@
+
+0000: entry
+0048: start
+
+0054: resetDisplay
+008C: getDisplayFlags
+00A4: setDisplayFlags
+00CC: clearDisplayFlags
+
+00E4: requestRedraw
+00F8: waitRedraw
+
+0128: getCellsPerRowCol
+
+0138: getCursorRect
+0168: setCursorRect
+019C: setCursorPos
+01AC: getCursorPos
+
+01BC: clearScreen
+0200: setCellContent
+0220: getCellContent
+0240: setCellChar
+0260: setCellColor
+
+0288: resetInput
+0294: waitInput
+02C4: getInputFlags
+02D0: getMousePos
+02E8: getMouseButton
+02F8: getMouseWheel
+0308: getKeyInfo
+
+0328: sub_328
+03A0: sub_3A0
+03A8: sub_3A8
+
+0440: resetCellMouse
+0468: drawCellMouse
+0518: resetCellHighlight
+0600: drawCellHighlight
+
+0718: sub_718
+0818: sub_818
+0B18: sub_B18
+0BA8: sub_BA8
+0C30: sub_C30
+0CCC: sub_CCC
+0E20: sub_E20
+
+1030: loadingScreen
+1108: main

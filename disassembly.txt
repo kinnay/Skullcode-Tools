@@ -1,0 +1,1570 @@
+
+entry:
+0000:00038A09: mov.32 rText = 0x00000050
+0008:05008209: mov.32 [rParam] = rCode
+000C:0000820D: add.32 [rParam] += 0x00003000
+0014:00060A09: mov.32 rCall = [rParam]
+0018:0000820D: add.32 [rParam] += 0x00006000
+0020:00020A09: mov.32 rParam = [rParam]
+0024:02008209: mov.32 [rParam] = rParam
+0028:0000820D: add.32 [rParam] += 0x00010000
+0030:00040A09: mov.32 rEntity = [rParam]
+0034:0000820D: add.32 [rParam] += 0x00010000
+003C:00010A09: mov.32 rHeap = [rParam]
+0040:0000820B: jmp.al -> start
+
+start:
+0048:01008008: mode 0x01
+004C:0000820B: jmp.al -> main
+
+resetDisplay:
+0054:00008209: mov.32 [rParam] = 0x80000000
+005C:0000821F: call -> [0x0] clearDisplayFlags
+0064:01008002: wait 0x01
+0068:0000821F: call -> [0x0] getDisplayFlags
+0070:00008211: and.32 [rParam] &= 0x80000000
+0078:0000820A: cmp.32 [rParam], 0x00000000
+0080:0004820B: jmp.eq -> 0x00000064
+0088:00000020: ret
+
+getDisplayFlags:
+008C:00008209: mov.32 [rParam] = 0x00000040
+0094:00007209: mov.32 [rParam] = [[rParam]]
+0098:00008211: and.32 [rParam] &= 0xFF000000
+00A0:00000020: ret
+
+setDisplayFlags:
+00A4:00080209: mov.32 [rParam+0x8] = [rParam]
+00A8:00088211: and.32 [rParam+0x8] &= 0xFF000000
+00B0:00048209: mov.32 [rParam+0x4] = 0x00000040
+00B8:08047A12: or.32 [[rParam+0x4]] |= [rParam+0x8]
+00BC:04007209: mov.32 [rParam] = [[rParam+0x4]]
+00C0:00008211: and.32 [rParam] &= 0xFF000000
+00C8:00000020: ret
+
+clearDisplayFlags:
+00CC:00048209: mov.32 [rParam+0x4] = 0x00000040
+00D4:0008020F: not.32 [rParam+0x8] = ~[rParam]
+00D8:08047A11: and.32 [[rParam+0x4]] &= [rParam+0x8]
+00DC:04007209: mov.32 [rParam] = [[rParam+0x4]]
+00E0:00000020: ret
+
+requestRedraw:
+00E4:00008209: mov.32 [rParam] = 0x20000000
+00EC:0000821F: call -> [0x0] setDisplayFlags
+00F4:00000020: ret
+
+waitRedraw:
+00F8:0000821F: call -> [0x0] getDisplayFlags
+0100:00008211: and.32 [rParam] &= 0x20000000
+0108:0000820A: cmp.32 [rParam], 0x00000000
+0110:0004820B: jmp.eq -> 0x00000124
+0118:01008002: wait 0x01
+011C:0000820B: jmp.al -> waitRedraw
+
+0124:00000020: ret
+
+getCellsPerRowCol:
+0128:00008209: mov.32 [rParam] = 0x00000048
+0130:00007209: mov.32 [rParam] = [[rParam]]
+0134:00000020: ret
+
+getCursorRect:
+0138:00048209: mov.32 [rParam+0x4] = 0x00000040
+0140:04047209: mov.32 [rParam+0x4] = [[rParam+0x4]]
+0144:04000009: mov.8 [rParam] = [rParam+0x4]
+0148:04008015: shr.8 [rParam] >>>= 0x04
+014C:04010009: mov.8 [rParam+0x1] = [rParam+0x4]
+0150:0F018011: and.8 [rParam+0x1] &= 0x0F
+0154:05020009: mov.8 [rParam+0x2] = [rParam+0x5]
+0158:04028015: shr.8 [rParam+0x2] >>>= 0x04
+015C:05030009: mov.8 [rParam+0x3] = [rParam+0x5]
+0160:0F038011: and.8 [rParam+0x3] &= 0x0F
+0164:00000020: ret
+
+setCursorRect:
+0168:04040210: xor.32 [rParam+0x4] ^= [rParam+0x4]
+016C:00040009: mov.8 [rParam+0x4] = [rParam]
+0170:04048013: shl.8 [rParam+0x4] <<= 0x04
+0174:01040012: or.8 [rParam+0x4] |= [rParam+0x1]
+0178:02050009: mov.8 [rParam+0x5] = [rParam+0x2]
+017C:04058013: shl.8 [rParam+0x5] <<= 0x04
+0180:03050012: or.8 [rParam+0x5] |= [rParam+0x3]
+0184:00088209: mov.32 [rParam+0x8] = 0x00000040
+018C:0008FA11: and.32 [[rParam+0x8]] &= 0xFFFF0000
+0194:04087A12: or.32 [[rParam+0x8]] |= [rParam+0x4]
+0198:00000020: ret
+
+setCursorPos:
+019C:00048209: mov.32 [rParam+0x4] = 0x00000044
+01A4:00047A09: mov.32 [[rParam+0x4]] = [rParam]
+01A8:00000020: ret
+
+getCursorPos:
+01AC:00048209: mov.32 [rParam+0x4] = 0x00000044
+01B4:04007209: mov.32 [rParam] = [[rParam+0x4]]
+01B8:00000020: ret
+
+clearScreen:
+01BC:00040209: mov.32 [rParam+0x4] = [rParam]
+01C0:00060109: mov.16 [rParam+0x6] = [rParam]
+01C4:0002821F: call -> [0x8] getCellsPerRowCol
+01CC:0A0C0109: mov.16 [rParam+0xC] = [rParam+0xA]
+01D0:000A8109: mov.16 [rParam+0xA] = 0x0000
+01D8:0C08011A: mul.16 [rParam+0x8] *= [rParam+0xC]
+01DC:01088213: shl.32 [rParam+0x8] <<= 0x01
+01E0:0C0C0210: xor.32 [rParam+0xC] ^= [rParam+0xC]
+01E4:040C3A09: mov.32 [rText+[rParam+0xC]] = [rParam+0x4]
+01E8:000C820D: add.32 [rParam+0xC] += 0x00000004
+01F0:080C020A: cmp.32 [rParam+0xC], [rParam+0x8]
+01F4:001C820B: jmp.le -> 0x000001E4
+01FC:00000020: ret
+
+setCellContent:
+0200:000C0209: mov.32 [rParam+0xC] = [rParam]
+0204:010C8213: shl.32 [rParam+0xC] <<= 0x01
+0208:04100209: mov.32 [rParam+0x10] = [rParam+0x4]
+020C:0010821A: mul.32 [rParam+0x10] *= 0x000000A0
+0214:100C020D: add.32 [rParam+0xC] += [rParam+0x10]
+0218:080C3909: mov.16 [rText+[rParam+0xC]] = [rParam+0x8]
+021C:00000020: ret
+
+getCellContent:
+0220:000C0209: mov.32 [rParam+0xC] = [rParam]
+0224:010C8213: shl.32 [rParam+0xC] <<= 0x01
+0228:04100209: mov.32 [rParam+0x10] = [rParam+0x4]
+022C:0010821A: mul.32 [rParam+0x10] *= 0x000000A0
+0234:100C020D: add.32 [rParam+0xC] += [rParam+0x10]
+0238:0C083109: mov.16 [rParam+0x8] = [rText+[rParam+0xC]]
+023C:00000020: ret
+
+setCellChar:
+0240:000C0209: mov.32 [rParam+0xC] = [rParam]
+0244:010C8213: shl.32 [rParam+0xC] <<= 0x01
+0248:04100209: mov.32 [rParam+0x10] = [rParam+0x4]
+024C:0010821A: mul.32 [rParam+0x10] *= 0x000000A0
+0254:100C020D: add.32 [rParam+0xC] += [rParam+0x10]
+0258:080C3809: mov.8 [rText+[rParam+0xC]] = [rParam+0x8]
+025C:00000020: ret
+
+setCellColor:
+0260:000C0209: mov.32 [rParam+0xC] = [rParam]
+0264:010C8213: shl.32 [rParam+0xC] <<= 0x01
+0268:04100209: mov.32 [rParam+0x10] = [rParam+0x4]
+026C:0010821A: mul.32 [rParam+0x10] *= 0x000000A0
+0274:100C020D: add.32 [rParam+0xC] += [rParam+0x10]
+0278:000C820D: add.32 [rParam+0xC] += 0x00000001
+0280:090C3809: mov.8 [rText+[rParam+0xC]] = [rParam+0x9]
+0284:00000020: ret
+
+resetInput:
+0288:00000210: xor.32 [rParam] ^= [rParam]
+028C:00007A09: mov.32 [[rParam]] = [rParam]
+0290:00000020: ret
+
+waitInput:
+0294:00000210: xor.32 [rParam] ^= [rParam]
+0298:00007209: mov.32 [rParam] = [[rParam]]
+029C:0000820A: cmp.32 [rParam], 0x00000000
+02A4:0018820B: jmp.ne -> 0x000002B8
+02AC:01008002: wait 0x01
+02B0:0000820B: jmp.al -> 0x00000298
+
+02B8:04040210: xor.32 [rParam+0x4] ^= [rParam+0x4]
+02BC:04047A09: mov.32 [[rParam+0x4]] = [rParam+0x4]
+02C0:00000020: ret
+
+getInputFlags:
+02C4:00000210: xor.32 [rParam] ^= [rParam]
+02C8:00007209: mov.32 [rParam] = [[rParam]]
+02CC:00000020: ret
+
+getMousePos:
+02D0:00008209: mov.32 [rParam] = 0x00000018
+02D8:00047209: mov.32 [rParam+0x4] = [[rParam]]
+02DC:0400800E: sub.8 [rParam] -= 0x04
+02E0:00007209: mov.32 [rParam] = [[rParam]]
+02E4:00000020: ret
+
+getMouseButton:
+02E8:00008209: mov.32 [rParam] = 0x0000001C
+02F0:00007209: mov.32 [rParam] = [[rParam]]
+02F4:00000020: ret
+
+getMouseWheel:
+02F8:00008209: mov.32 [rParam] = 0x00000020
+0300:00007209: mov.32 [rParam] = [[rParam]]
+0304:00000020: ret
+
+getKeyInfo:
+0308:00008209: mov.32 [rParam] = 0x00000010
+0310:00047209: mov.32 [rParam+0x4] = [[rParam]]
+0314:0800800E: sub.8 [rParam] -= 0x08
+0318:00087209: mov.32 [rParam+0x8] = [[rParam]]
+031C:0400800D: add.8 [rParam] += 0x04
+0320:00007209: mov.32 [rParam] = [[rParam]]
+0324:00000020: ret
+
+sub_328:
+0328:000C0209: mov.32 [rParam+0xC] = [rParam]
+032C:04100209: mov.32 [rParam+0x10] = [rParam+0x4]
+0330:14140210: xor.32 [rParam+0x14] ^= [rParam+0x14]
+0334:08140009: mov.8 [rParam+0x14] = [rParam+0x8]
+0338:08150009: mov.8 [rParam+0x15] = [rParam+0x8]
+033C:0F158011: and.8 [rParam+0x15] &= 0x0F
+0340:04148014: shrx.8 [rParam+0x14] >>= 0x04
+0344:0F148011: and.8 [rParam+0x14] &= 0x0F
+0348:0914800A: cmp.8 [rParam+0x14], 0x09
+034C:0024820B: jmp.ge -> 0x00000360
+0354:3014800D: add.8 [rParam+0x14] += 0x30
+0358:0000820B: jmp.al -> 0x00000364
+
+0360:5714800D: add.8 [rParam+0x14] += 0x57
+0364:0003821F: call -> [0xC] setCellChar
+036C:000C820D: add.32 [rParam+0xC] += 0x00000001
+0374:15140009: mov.8 [rParam+0x14] = [rParam+0x15]
+0378:0914800A: cmp.8 [rParam+0x14], 0x09
+037C:0024820B: jmp.ge -> 0x00000390
+0384:3014800D: add.8 [rParam+0x14] += 0x30
+0388:0000820B: jmp.al -> 0x00000394
+
+0390:5714800D: add.8 [rParam+0x14] += 0x57
+0394:0003821F: call -> [0xC] setCellChar
+039C:00000020: ret
+
+sub_3A0:
+03A0:080C3809: mov.8 [rText+[rParam+0xC]] = [rParam+0x8]
+03A4:00000020: ret
+
+sub_3A8:
+03A8:0004821F: call -> [0x10] getCellsPerRowCol
+03B0:12120110: xor.16 [rParam+0x12] ^= [rParam+0x12]
+03B4:01108213: shl.32 [rParam+0x10] <<= 0x01
+03B8:1004021A: mul.32 [rParam+0x4] *= [rParam+0x10]
+03BC:01008213: shl.32 [rParam] <<= 0x01
+03C0:0400020D: add.32 [rParam] += [rParam+0x4]
+03C4:10100210: xor.32 [rParam+0x10] ^= [rParam+0x10]
+03C8:08107009: mov.8 [rParam+0x10] = [[rParam+0x8]]
+03CC:10140009: mov.8 [rParam+0x14] = [rParam+0x10]
+03D0:04108014: shrx.8 [rParam+0x10] >>= 0x04
+03D4:0F108011: and.8 [rParam+0x10] &= 0x0F
+03D8:3010800D: add.8 [rParam+0x10] += 0x30
+03DC:3910800A: cmp.8 [rParam+0x10], 0x39
+03E0:0020820B: jmp.lt -> 0x000003EC
+03E8:2710800D: add.8 [rParam+0x10] += 0x27
+03EC:10003809: mov.8 [rText+[rParam]] = [rParam+0x10]
+03F0:0000820D: add.32 [rParam] += 0x00000002
+03F8:0F148011: and.8 [rParam+0x14] &= 0x0F
+03FC:3014800D: add.8 [rParam+0x14] += 0x30
+0400:3914800A: cmp.8 [rParam+0x14], 0x39
+0404:0020820B: jmp.lt -> 0x00000410
+040C:2714800D: add.8 [rParam+0x14] += 0x27
+0410:14003809: mov.8 [rText+[rParam]] = [rParam+0x14]
+0414:0000820D: add.32 [rParam] += 0x00000004
+041C:0008820D: add.32 [rParam+0x8] += 0x00000001
+0424:000C820E: sub.32 [rParam+0xC] -= 0x00000001
+042C:000C820A: cmp.32 [rParam+0xC], 0x00000000
+0434:0024820B: jmp.ge -> 0x000003C4
+043C:00000020: ret
+
+resetCellMouse:
+0440:00008209: mov.32 [rParam] = 0x00000014
+0448:00081209: mov.32 [rParam+0x8] = [rHeap+[rParam]]
+044C:0400800E: sub.8 [rParam] -= 0x04
+0450:00041209: mov.32 [rParam+0x4] = [rHeap+[rParam]]
+0454:0400800E: sub.8 [rParam] -= 0x04
+0458:00001209: mov.32 [rParam] = [rHeap+[rParam]]
+045C:0000821F: call -> [0x0] setCellContent
+0464:00000020: ret
+
+drawCellMouse:
+0468:0000821F: call -> [0x0] getMousePos
+0470:0000820A: cmp.32 [rParam], 0x00000000
+0478:0014820B: jmp.gt_u -> 0x00000488
+0480:00008209: mov.32 [rParam] = 0x00000000
+0488:0004820A: cmp.32 [rParam+0x4], 0x00000000
+0490:0014820B: jmp.gt_u -> 0x000004A0
+0498:00048209: mov.32 [rParam+0x4] = 0x00000000
+04A0:0000821B: div.32 [rParam] /= 0x00000012
+04A8:05048214: shrx.32 [rParam+0x4] >>= 0x05
+04AC:0000820A: cmp.32 [rParam], 0x0000004F
+04B4:000C820B: jmp.lt_u -> 0x000004C4
+04BC:00008209: mov.32 [rParam] = 0x0000004F
+04C4:0004820A: cmp.32 [rParam+0x4], 0x00000018
+04CC:000C820B: jmp.lt_u -> 0x000004DC
+04D4:00048209: mov.32 [rParam+0x4] = 0x00000018
+04DC:0000821F: call -> [0x0] getCellContent
+04E4:00108209: mov.32 [rParam+0x10] = 0x00000014
+04EC:08101A09: mov.32 [rHeap+[rParam+0x10]] = [rParam+0x8]
+04F0:0410800E: sub.8 [rParam+0x10] -= 0x04
+04F4:04101A09: mov.32 [rHeap+[rParam+0x10]] = [rParam+0x4]
+04F8:0410800E: sub.8 [rParam+0x10] -= 0x04
+04FC:00101A09: mov.32 [rHeap+[rParam+0x10]] = [rParam]
+0500:00088111: and.16 [rParam+0x8] &= 0x00FF
+0508:74098009: mov.8 [rParam+0x9] = 0x74
+050C:0000821F: call -> [0x0] setCellContent
+0514:00000020: ret
+
+resetCellHighlight:
+0518:00008209: mov.32 [rParam] = 0x00000008
+0520:00041209: mov.32 [rParam+0x4] = [rHeap+[rParam]]
+0524:0400800E: sub.8 [rParam] -= 0x04
+0528:00001209: mov.32 [rParam] = [rHeap+[rParam]]
+052C:00088209: mov.32 [rParam+0x8] = 0x0000000C
+0534:000C0209: mov.32 [rParam+0xC] = [rParam]
+0538:000C8211: and.32 [rParam+0xC] &= 0x0000000F
+0540:000C821A: mul.32 [rParam+0xC] *= 0x00000003
+0548:0C08020D: add.32 [rParam+0x8] += [rParam+0xC]
+054C:000C0209: mov.32 [rParam+0xC] = [rParam]
+0550:040C8215: shr.32 [rParam+0xC] >>>= 0x04
+0554:00010009: mov.8 [rParam+0x1] = [rParam]
+0558:01018011: and.8 [rParam+0x1] &= 0x01
+055C:01020009: mov.8 [rParam+0x2] = [rParam+0x1]
+0560:01028010: xor.8 [rParam+0x2] ^= 0x01
+0564:1A01801A: mul.8 [rParam+0x1] *= 0x1A
+0568:1A02801A: mul.8 [rParam+0x2] *= 0x1A
+056C:2001800D: add.8 [rParam+0x1] += 0x20
+0570:2002800D: add.8 [rParam+0x2] += 0x20
+0574:20108009: mov.8 [rParam+0x10] = 0x20
+0578:00110009: mov.8 [rParam+0x11] = [rParam]
+057C:04118011: and.8 [rParam+0x11] &= 0x04
+0580:04118010: xor.8 [rParam+0x11] ^= 0x04
+0584:02118015: shr.8 [rParam+0x11] >>>= 0x02
+0588:08038009: mov.8 [rParam+0x3] = 0x08
+058C:1103000E: sub.8 [rParam+0x3] -= [rParam+0x11]
+0590:03110009: mov.8 [rParam+0x11] = [rParam+0x3]
+0594:0002821F: call -> [0x8] setCellColor
+059C:0008820D: add.32 [rParam+0x8] += 0x00000001
+05A4:0002821F: call -> [0x8] setCellColor
+05AC:0008820E: sub.32 [rParam+0x8] -= 0x00000002
+05B4:00108109: mov.16 [rParam+0x10] = 0x0420
+05BC:01100009: mov.8 [rParam+0x10] = [rParam+0x1]
+05C0:0002821F: call -> [0x8] setCellContent
+05C8:02100009: mov.8 [rParam+0x10] = [rParam+0x2]
+05CC:0008820D: add.32 [rParam+0x8] += 0x00000003
+05D4:0002821F: call -> [0x8] setCellContent
+05DC:00080209: mov.32 [rParam+0x8] = [rParam]
+05E0:00088211: and.32 [rParam+0x8] &= 0x0000000F
+05E8:0008820D: add.32 [rParam+0x8] += 0x0000003E
+05F0:03110009: mov.8 [rParam+0x11] = [rParam+0x3]
+05F4:0002821F: call -> [0x8] setCellColor
+05FC:00000020: ret
+
+drawCellHighlight:
+0600:00008209: mov.32 [rParam] = 0x00000008
+0608:00041209: mov.32 [rParam+0x4] = [rHeap+[rParam]]
+060C:0400800E: sub.8 [rParam] -= 0x04
+0610:00001209: mov.32 [rParam] = [rHeap+[rParam]]
+0614:00088209: mov.32 [rParam+0x8] = 0x0000000C
+061C:000C0209: mov.32 [rParam+0xC] = [rParam]
+0620:000C8211: and.32 [rParam+0xC] &= 0x0000000F
+0628:000C821A: mul.32 [rParam+0xC] *= 0x00000003
+0630:0C08020D: add.32 [rParam+0x8] += [rParam+0xC]
+0634:000C0209: mov.32 [rParam+0xC] = [rParam]
+0638:040C8215: shr.32 [rParam+0xC] >>>= 0x04
+063C:00108109: mov.16 [rParam+0x10] = 0x4FDD
+0644:FF04800A: cmp.8 [rParam+0x4], 0xFF
+0648:0018820B: jmp.ne -> 0x00000654
+0650:47118009: mov.8 [rParam+0x11] = 0x47
+0654:0002821F: call -> [0x8] setCellColor
+065C:0008820D: add.32 [rParam+0x8] += 0x00000001
+0664:0002821F: call -> [0x8] setCellColor
+066C:0008820E: sub.32 [rParam+0x8] -= 0x00000002
+0674:40118009: mov.8 [rParam+0x11] = 0x40
+0678:0002821F: call -> [0x8] setCellContent
+0680:DE108009: mov.8 [rParam+0x10] = 0xDE
+0684:0008820D: add.32 [rParam+0x8] += 0x00000003
+068C:0002821F: call -> [0x8] setCellContent
+0694:F004800A: cmp.8 [rParam+0x4], 0xF0
+0698:0024820B: jmp.ge -> 0x000006CC
+06A0:0004820B: jmp.eq -> 0x000006B0
+06A8:0008820D: add.32 [rParam+0x8] += 0x00000001
+06B0:0008820E: sub.32 [rParam+0x8] -= 0x00000002
+06B8:0C0A0109: mov.16 [rParam+0xA] = [rParam+0xC]
+06BC:0002821F: call -> [0x8] setCursorPos
+06C4:000C0209: mov.32 [rParam+0xC] = [rParam]
+06C8:040C8215: shr.32 [rParam+0xC] >>>= 0x04
+06CC:00080209: mov.32 [rParam+0x8] = [rParam]
+06D0:00088211: and.32 [rParam+0x8] &= 0x0000000F
+06D8:0008820D: add.32 [rParam+0x8] += 0x0000003E
+06E0:47118009: mov.8 [rParam+0x11] = 0x47
+06E4:FF04800A: cmp.8 [rParam+0x4], 0xFF
+06E8:0018820B: jmp.ne -> 0x000006F4
+06F0:4F118009: mov.8 [rParam+0x11] = 0x4F
+06F4:0002821F: call -> [0x8] setCellColor
+06FC:FF04800A: cmp.8 [rParam+0x4], 0xFF
+0700:0018820B: jmp.ne -> 0x00000714
+0708:0C0A0109: mov.16 [rParam+0xA] = [rParam+0xC]
+070C:0002821F: call -> [0x8] setCursorPos
+0714:00000020: ret
+
+sub_718:
+0718:08080210: xor.32 [rParam+0x8] ^= [rParam+0x8]
+071C:00040209: mov.32 [rParam+0x4] = [rParam]
+0720:00048211: and.32 [rParam+0x4] &= 0x00000001
+0728:0004820A: cmp.32 [rParam+0x4], 0x00000000
+0730:0004820B: jmp.eq -> 0x00000738
+0738:00040209: mov.32 [rParam+0x4] = [rParam]
+073C:00048211: and.32 [rParam+0x4] &= 0x00000002
+0744:0004820A: cmp.32 [rParam+0x4], 0x00000000
+074C:0004820B: jmp.eq -> 0x00000760
+0754:0003821F: call -> [0xC] sub_CCC
+075C:01088009: mov.8 [rParam+0x8] = 0x01
+0760:00040209: mov.32 [rParam+0x4] = [rParam]
+0764:00048211: and.32 [rParam+0x4] &= 0x00000004
+076C:0004820A: cmp.32 [rParam+0x4], 0x00000000
+0774:0004820B: jmp.eq -> 0x0000077C
+077C:00040209: mov.32 [rParam+0x4] = [rParam]
+0780:00048211: and.32 [rParam+0x4] &= 0x00000008
+0788:0004820A: cmp.32 [rParam+0x4], 0x00000000
+0790:0004820B: jmp.eq -> 0x000007A4
+0798:0003821F: call -> [0xC] sub_C30
+07A0:01088009: mov.8 [rParam+0x8] = 0x01
+07A4:00040209: mov.32 [rParam+0x4] = [rParam]
+07A8:00048211: and.32 [rParam+0x4] &= 0x00000010
+07B0:0004820A: cmp.32 [rParam+0x4], 0x00000000
+07B8:0004820B: jmp.eq -> 0x000007CC
+07C0:0003821F: call -> [0xC] sub_818
+07C8:01088009: mov.8 [rParam+0x8] = 0x01
+07CC:00040209: mov.32 [rParam+0x4] = [rParam]
+07D0:00048211: and.32 [rParam+0x4] &= 0x00000020
+07D8:0004820A: cmp.32 [rParam+0x4], 0x00000000
+07E0:0004820B: jmp.eq -> 0x000007E8
+07E8:00040209: mov.32 [rParam+0x4] = [rParam]
+07EC:00048211: and.32 [rParam+0x4] &= 0x00000040
+07F4:0004820A: cmp.32 [rParam+0x4], 0x00000000
+07FC:0004820B: jmp.eq -> 0x00000810
+0804:0003821F: call -> [0xC] sub_B18
+080C:01088009: mov.8 [rParam+0x8] = 0x01
+0810:08000209: mov.32 [rParam] = [rParam+0x8]
+0814:00000020: ret
+
+sub_818:
+0818:0000821F: call -> [0x0] getKeyInfo
+0820:0900800A: cmp.8 [rParam], 0x09
+0824:0018820B: jmp.ne -> 0x00000860
+082C:000C8209: mov.32 [rParam+0xC] = 0x00000008
+0834:0C101209: mov.32 [rParam+0x10] = [rHeap+[rParam+0xC]]
+0838:FF10800A: cmp.8 [rParam+0x10], 0xFF
+083C:0004820B: jmp.eq -> 0x00000858
+0844:00108209: mov.32 [rParam+0x10] = 0x000000FF
+084C:100C1A09: mov.32 [rHeap+[rParam+0xC]] = [rParam+0x10]
+0850:0000820B: jmp.al -> 0x00000860
+
+0858:F0108009: mov.8 [rParam+0x10] = 0xF0
+085C:100C1A09: mov.32 [rHeap+[rParam+0xC]] = [rParam+0x10]
+0860:2600800A: cmp.8 [rParam], 0x26
+0864:0018820B: jmp.ne -> 0x000008C0
+086C:0005821F: call -> [0x14] resetCellHighlight
+0874:000C8209: mov.32 [rParam+0xC] = 0x00000004
+087C:0C101209: mov.32 [rParam+0x10] = [rHeap+[rParam+0xC]]
+0880:0010820A: cmp.32 [rParam+0x10], 0x00000010
+0888:0028820B: jmp.gt -> 0x000008B4
+0890:0010820D: add.32 [rParam+0x10] += 0x00000010
+0898:14140210: xor.32 [rParam+0x14] ^= [rParam+0x14]
+089C:00149A0A: cmp.32 [rHeap+[rParam+0x14]], 0x00000010
+08A4:001C820B: jmp.le -> 0x000008B4
+08AC:00149A0E: sub.32 [rHeap+[rParam+0x14]] -= 0x00000010
+08B4:0010820E: sub.32 [rParam+0x10] -= 0x00000010
+08BC:100C1A09: mov.32 [rHeap+[rParam+0xC]] = [rParam+0x10]
+08C0:2800800A: cmp.8 [rParam], 0x28
+08C4:0018820B: jmp.ne -> 0x00000920
+08CC:0005821F: call -> [0x14] resetCellHighlight
+08D4:000C8209: mov.32 [rParam+0xC] = 0x00000004
+08DC:0C101209: mov.32 [rParam+0x10] = [rHeap+[rParam+0xC]]
+08E0:0010820A: cmp.32 [rParam+0x10], 0x00000180
+08E8:001C820B: jmp.le -> 0x00000914
+08F0:0010820E: sub.32 [rParam+0x10] -= 0x00000010
+08F8:14140210: xor.32 [rParam+0x14] ^= [rParam+0x14]
+08FC:00149A0A: cmp.32 [rHeap+[rParam+0x14]], 0xFFFFFE70
+0904:0028820B: jmp.gt -> 0x00000914
+090C:00149A0D: add.32 [rHeap+[rParam+0x14]] += 0x00000010
+0914:0010820D: add.32 [rParam+0x10] += 0x00000010
+091C:100C1A09: mov.32 [rHeap+[rParam+0xC]] = [rParam+0x10]
+0920:0800800A: cmp.8 [rParam], 0x08
+0924:0004820B: jmp.eq -> 0x00000938
+092C:2500800A: cmp.8 [rParam], 0x25
+0930:0018820B: jmp.ne -> 0x000009B8
+0938:0005821F: call -> [0x14] resetCellHighlight
+0940:000C8209: mov.32 [rParam+0xC] = 0x00000008
+0948:000C9A0A: cmp.32 [rHeap+[rParam+0xC]], 0x000000F0
+0950:0024820B: jmp.ge -> 0x00000964
+0958:FF0C9810: xor.8 [rHeap+[rParam+0xC]] ^= 0xFF
+095C:0018820B: jmp.ne -> 0x000009B8
+0964:000C8209: mov.32 [rParam+0xC] = 0x00000004
+096C:0C101209: mov.32 [rParam+0x10] = [rHeap+[rParam+0xC]]
+0970:0010820A: cmp.32 [rParam+0x10], 0x00000001
+0978:001C820B: jmp.le -> 0x00000990
+0980:0010820E: sub.32 [rParam+0x10] -= 0x00000001
+0988:0000820B: jmp.al -> 0x000009B4
+
+0990:14140210: xor.32 [rParam+0x14] ^= [rParam+0x14]
+0994:00149A0A: cmp.32 [rHeap+[rParam+0x14]], 0x00000010
+099C:001C820B: jmp.le -> 0x000009B8
+09A4:00149A0E: sub.32 [rHeap+[rParam+0x14]] -= 0x00000010
+09AC:0010820D: add.32 [rParam+0x10] += 0x0000000F
+09B4:100C1A09: mov.32 [rHeap+[rParam+0xC]] = [rParam+0x10]
+09B8:0800800A: cmp.8 [rParam], 0x08
+09BC:0018820B: jmp.ne -> 0x00000A08
+09C4:0C0C0210: xor.32 [rParam+0xC] ^= [rParam+0xC]
+09C8:0C101209: mov.32 [rParam+0x10] = [rHeap+[rParam+0xC]]
+09CC:040C800D: add.8 [rParam+0xC] += 0x04
+09D0:0C10120D: add.32 [rParam+0x10] += [rHeap+[rParam+0xC]]
+09D4:040C800D: add.8 [rParam+0xC] += 0x04
+09D8:0C0C1209: mov.32 [rParam+0xC] = [rHeap+[rParam+0xC]]
+09DC:000C820A: cmp.32 [rParam+0xC], 0x000000FF
+09E4:0004820B: jmp.eq -> 0x00000A00
+09EC:10087009: mov.8 [rParam+0x8] = [[rParam+0x10]]
+09F0:FF0C8010: xor.8 [rParam+0xC] ^= 0xFF
+09F4:0C080011: and.8 [rParam+0x8] &= [rParam+0xC]
+09F8:0000820B: jmp.al -> 0x00000A04
+
+0A00:20088009: mov.8 [rParam+0x8] = 0x20
+0A04:08107809: mov.8 [[rParam+0x10]] = [rParam+0x8]
+0A08:2700800A: cmp.8 [rParam], 0x27
+0A0C:0018820B: jmp.ne -> 0x00000A94
+0A14:0005821F: call -> [0x14] resetCellHighlight
+0A1C:000C8209: mov.32 [rParam+0xC] = 0x00000008
+0A24:000C9A0A: cmp.32 [rHeap+[rParam+0xC]], 0x000000F0
+0A2C:0024820B: jmp.ge -> 0x00000A40
+0A34:FF0C9810: xor.8 [rHeap+[rParam+0xC]] ^= 0xFF
+0A38:0004820B: jmp.eq -> 0x00000A94
+0A40:000C8209: mov.32 [rParam+0xC] = 0x00000004
+0A48:0C101209: mov.32 [rParam+0x10] = [rHeap+[rParam+0xC]]
+0A4C:0010820A: cmp.32 [rParam+0x10], 0x0000018F
+0A54:0028820B: jmp.gt -> 0x00000A6C
+0A5C:0010820D: add.32 [rParam+0x10] += 0x00000001
+0A64:0000820B: jmp.al -> 0x00000A90
+
+0A6C:14140210: xor.32 [rParam+0x14] ^= [rParam+0x14]
+0A70:00149A0A: cmp.32 [rHeap+[rParam+0x14]], 0xFFFFFE70
+0A78:0028820B: jmp.gt -> 0x00000A90
+0A80:0010820E: sub.32 [rParam+0x10] -= 0x0000000F
+0A88:00149A0D: add.32 [rHeap+[rParam+0x14]] += 0x00000010
+0A90:100C1A09: mov.32 [rHeap+[rParam+0xC]] = [rParam+0x10]
+0A94:2100800A: cmp.8 [rParam], 0x21
+0A98:0018820B: jmp.ne -> 0x00000AD4
+0AA0:0005821F: call -> [0x14] resetCellHighlight
+0AA8:0C0C0210: xor.32 [rParam+0xC] ^= [rParam+0xC]
+0AAC:000C9A0A: cmp.32 [rHeap+[rParam+0xC]], 0x00000180
+0AB4:001C820B: jmp.le -> 0x00000ACC
+0ABC:000C9A0E: sub.32 [rHeap+[rParam+0xC]] -= 0x00000180
+0AC4:0000820B: jmp.al -> 0x00000AD4
+
+0ACC:000C9A09: mov.32 [rHeap+[rParam+0xC]] = 0x00000000
+0AD4:2200800A: cmp.8 [rParam], 0x22
+0AD8:0018820B: jmp.ne -> 0x00000B14
+0AE0:0005821F: call -> [0x14] resetCellHighlight
+0AE8:0C0C0210: xor.32 [rParam+0xC] ^= [rParam+0xC]
+0AEC:000C9A0A: cmp.32 [rHeap+[rParam+0xC]], 0xFFFFFCF0
+0AF4:0028820B: jmp.gt -> 0x00000B0C
+0AFC:000C9A0D: add.32 [rHeap+[rParam+0xC]] += 0x00000180
+0B04:0000820B: jmp.al -> 0x00000B14
+
+0B0C:000C9A09: mov.32 [rHeap+[rParam+0xC]] = 0xFFFFFE70
+0B14:00000020: ret
+
+sub_B18:
+0B18:0000821F: call -> [0x0] getKeyInfo
+0B20:0004820A: cmp.32 [rParam+0x4], 0x00000000
+0B28:0004820B: jmp.eq -> 0x00000C2C
+0B30:000C8209: mov.32 [rParam+0xC] = 0x00000008
+0B38:FF0C980A: cmp.8 [rHeap+[rParam+0xC]], 0xFF
+0B3C:0018820B: jmp.ne -> sub_BA8
+0B44:0005821F: call -> [0x14] resetCellHighlight
+0B4C:0005821F: call -> [0x14] requestRedraw
+0B54:0C0C0210: xor.32 [rParam+0xC] ^= [rParam+0xC]
+0B58:0C101209: mov.32 [rParam+0x10] = [rHeap+[rParam+0xC]]
+0B5C:040C800D: add.8 [rParam+0xC] += 0x04
+0B60:0C10120D: add.32 [rParam+0x10] += [rHeap+[rParam+0xC]]
+0B64:04107809: mov.8 [[rParam+0x10]] = [rParam+0x4]
+0B68:0010820A: cmp.32 [rParam+0x10], 0xFFFFFFFF
+0B70:0004820B: jmp.eq -> 0x00000BA4
+0B78:000C9A0D: add.32 [rHeap+[rParam+0xC]] += 0x00000001
+0B80:000C9A0A: cmp.32 [rHeap+[rParam+0xC]], 0x00000190
+0B88:001C820B: jmp.le -> 0x00000BA4
+0B90:000C9A0E: sub.32 [rHeap+[rParam+0xC]] -= 0x00000010
+0B98:0C0C0210: xor.32 [rParam+0xC] ^= [rParam+0xC]
+0B9C:000C9A0D: add.32 [rHeap+[rParam+0xC]] += 0x00000010
+0BA4:00000020: ret
+
+sub_BA8:
+0BA8:10100210: xor.32 [rParam+0x10] ^= [rParam+0x10]
+0BAC:10141209: mov.32 [rParam+0x14] = [rHeap+[rParam+0x10]]
+0BB0:04108009: mov.8 [rParam+0x10] = 0x04
+0BB4:1014120D: add.32 [rParam+0x14] += [rHeap+[rParam+0x10]]
+0BB8:14107009: mov.8 [rParam+0x10] = [[rParam+0x14]]
+0BBC:3004800A: cmp.8 [rParam+0x4], 0x30
+0BC0:001C820B: jmp.le -> 0x00000C2C
+0BC8:3904800A: cmp.8 [rParam+0x4], 0x39
+0BCC:0024820B: jmp.ge -> 0x00000BE0
+0BD4:3004800E: sub.8 [rParam+0x4] -= 0x30
+0BD8:0000820B: jmp.al -> 0x00000C00
+
+0BE0:20048012: or.8 [rParam+0x4] |= 0x20
+0BE4:6104800A: cmp.8 [rParam+0x4], 0x61
+0BE8:001C820B: jmp.le -> 0x00000C2C
+0BF0:6604800A: cmp.8 [rParam+0x4], 0x66
+0BF4:0024820B: jmp.ge -> 0x00000C2C
+0BFC:5704800E: sub.8 [rParam+0x4] -= 0x57
+0C00:04050009: mov.8 [rParam+0x5] = [rParam+0x4]
+0C04:04058013: shl.8 [rParam+0x5] <<= 0x04
+0C08:05040012: or.8 [rParam+0x4] |= [rParam+0x5]
+0C0C:0C051009: mov.8 [rParam+0x5] = [rHeap+[rParam+0xC]]
+0C10:05040011: and.8 [rParam+0x4] &= [rParam+0x5]
+0C14:0505000F: not.8 [rParam+0x5] = ~[rParam+0x5]
+0C18:05100011: and.8 [rParam+0x10] &= [rParam+0x5]
+0C1C:04100012: or.8 [rParam+0x10] |= [rParam+0x4]
+0C20:10147809: mov.8 [[rParam+0x14]] = [rParam+0x10]
+0C24:0000820B: jmp.al -> 0x00000A14
+
+0C2C:00000020: ret
+
+sub_C30:
+0C30:0000821F: call -> [0x0] getMouseWheel
+0C38:0000820A: cmp.32 [rParam], 0x00000000
+0C40:0014820B: jmp.gt_u -> 0x00000C80
+0C48:0005821F: call -> [0x14] resetCellHighlight
+0C50:0C0C0210: xor.32 [rParam+0xC] ^= [rParam+0xC]
+0C54:000C9A0A: cmp.32 [rHeap+[rParam+0xC]], 0x000000C0
+0C5C:001C820B: jmp.le -> 0x00000C74
+0C64:000C9A0E: sub.32 [rHeap+[rParam+0xC]] -= 0x000000C0
+0C6C:0000820B: jmp.al -> 0x00000C80
+
+0C74:000C9A09: mov.32 [rHeap+[rParam+0xC]] = 0x00000000
+0C7C:00000020: ret
+
+0C80:0000820A: cmp.32 [rParam], 0x00000000
+0C88:000C820B: jmp.lt_u -> 0x00000CC8
+0C90:0005821F: call -> [0x14] resetCellHighlight
+0C98:0C0C0210: xor.32 [rParam+0xC] ^= [rParam+0xC]
+0C9C:000C9A0A: cmp.32 [rHeap+[rParam+0xC]], 0xFFFFFDB0
+0CA4:0028820B: jmp.gt -> 0x00000CBC
+0CAC:000C9A0D: add.32 [rHeap+[rParam+0xC]] += 0x000000C0
+0CB4:0000820B: jmp.al -> 0x00000CC8
+
+0CBC:000C9A09: mov.32 [rHeap+[rParam+0xC]] = 0xFFFFFE70
+0CC4:00000020: ret
+
+0CC8:00000020: ret
+
+sub_CCC:
+0CCC:0000821F: call -> [0x0] getMouseButton
+0CD4:00040009: mov.8 [rParam+0x4] = [rParam]
+0CD8:01048011: and.8 [rParam+0x4] &= 0x01
+0CDC:0004800A: cmp.8 [rParam+0x4], 0x00
+0CE0:0004820B: jmp.eq -> 0x00000E1C
+0CE8:00048209: mov.32 [rParam+0x4] = 0x0000000C
+0CF0:00088209: mov.32 [rParam+0x8] = 0x00000010
+0CF8:000C8209: mov.32 [rParam+0xC] = 0x00000008
+0D00:00049A0A: cmp.32 [rHeap+[rParam+0x4]], 0x0000003B
+0D08:0010820B: jmp.ge_u -> 0x00000DBC
+0D10:0004821F: call -> [0x10] resetCellHighlight
+0D18:00049A0A: cmp.32 [rHeap+[rParam+0x4]], 0x0000000B
+0D20:0028820B: jmp.gt -> 0x00000D4C
+0D28:00048209: mov.32 [rParam+0x4] = 0x00000004
+0D30:08081209: mov.32 [rParam+0x8] = [rHeap+[rParam+0x8]]
+0D34:0008821A: mul.32 [rParam+0x8] *= 0x00000010
+0D3C:00049A11: and.32 [rHeap+[rParam+0x4]] &= 0x0000000F
+0D44:08041A12: or.32 [rHeap+[rParam+0x4]] |= [rParam+0x8]
+0D48:00000020: ret
+
+0D4C:000C9A09: mov.32 [rHeap+[rParam+0xC]] = 0x0000000F
+0D54:040C1209: mov.32 [rParam+0xC] = [rHeap+[rParam+0x4]]
+0D58:000C820E: sub.32 [rParam+0xC] -= 0x0000000C
+0D60:000C821B: div.32 [rParam+0xC] /= 0x00000003
+0D68:08081209: mov.32 [rParam+0x8] = [rHeap+[rParam+0x8]]
+0D6C:0008821A: mul.32 [rParam+0x8] *= 0x00000010
+0D74:0C080212: or.32 [rParam+0x8] |= [rParam+0xC]
+0D78:00048209: mov.32 [rParam+0x4] = 0x00000004
+0D80:08041A09: mov.32 [rHeap+[rParam+0x4]] = [rParam+0x8]
+0D84:00048209: mov.32 [rParam+0x4] = 0x0000000C
+0D8C:040C1209: mov.32 [rParam+0xC] = [rHeap+[rParam+0x4]]
+0D90:000C821C: mod.32 [rParam+0xC] %= 0x00000003
+0D98:000C820A: cmp.32 [rParam+0xC], 0x00000000
+0DA0:0018820B: jmp.ne -> 0x00000DB8
+0DA8:000C8209: mov.32 [rParam+0xC] = 0x00000008
+0DB0:000C9A10: xor.32 [rHeap+[rParam+0xC]] ^= 0x000000FF
+0DB8:00000020: ret
+
+0DBC:000C9A09: mov.32 [rHeap+[rParam+0xC]] = 0x000000FF
+0DC4:000C8209: mov.32 [rParam+0xC] = 0x00000004
+0DCC:08081209: mov.32 [rParam+0x8] = [rHeap+[rParam+0x8]]
+0DD0:0008821A: mul.32 [rParam+0x8] *= 0x00000010
+0DD8:080C1A09: mov.32 [rHeap+[rParam+0xC]] = [rParam+0x8]
+0DDC:04081209: mov.32 [rParam+0x8] = [rHeap+[rParam+0x4]]
+0DE0:0008820A: cmp.32 [rParam+0x8], 0x0000003E
+0DE8:001C820B: jmp.le -> 0x00000E18
+0DF0:0008820E: sub.32 [rParam+0x8] -= 0x0000003E
+0DF8:0008820A: cmp.32 [rParam+0x8], 0x0000000F
+0E00:0020820B: jmp.lt -> 0x00000E10
+0E08:00088209: mov.32 [rParam+0x8] = 0x0000000F
+0E10:080C1A12: or.32 [rHeap+[rParam+0xC]] |= [rParam+0x8]
+0E14:00000020: ret
+
+0E18:00000020: ret
+
+0E1C:00000020: ret
+
+sub_E20:
+0E20:00008209: mov.32 [rParam] = 0x00000720
+0E28:0000821F: call -> [0x0] sub_1BC
+0E30:00288209: mov.32 [rParam+0x28] = 0x00000000
+0E38:00008209: mov.32 [rParam] = 0x0000000A
+0E40:28040209: mov.32 [rParam+0x4] = [rParam+0x28]
+0E44:00088109: mov.16 [rParam+0x8] = 0x04B3
+0E4C:0000821F: call -> [0x0] setCellContent
+0E54:00008209: mov.32 [rParam] = 0x0000003C
+0E5C:0000821F: call -> [0x0] setCellContent
+0E64:00008209: mov.32 [rParam] = 0x00000042
+0E6C:00088109: mov.16 [rParam+0x8] = 0x0801
+0E74:0000821F: call -> [0x0] setCellContent
+0E7C:0000820D: add.32 [rParam] += 0x00000001
+0E84:0000820A: cmp.32 [rParam], 0x00000045
+0E8C:0020820B: jmp.lt -> 0x00000E6C
+0E94:00008209: mov.32 [rParam] = 0x0000004A
+0E9C:00088109: mov.16 [rParam+0x8] = 0x0801
+0EA4:0000821F: call -> [0x0] setCellContent
+0EAC:0000820D: add.32 [rParam] += 0x00000001
+0EB4:0000820A: cmp.32 [rParam], 0x0000004D
+0EBC:0020820B: jmp.lt -> 0x00000E9C
+0EC4:00008209: mov.32 [rParam] = 0x00000018
+0ECC:00088109: mov.16 [rParam+0x8] = 0x0820
+0ED4:0000821F: call -> [0x0] setCellContent
+0EDC:0000820D: add.32 [rParam] += 0x00000001
+0EE4:0000820A: cmp.32 [rParam], 0x00000022
+0EEC:0020820B: jmp.lt -> 0x00000ECC
+0EF4:00008209: mov.32 [rParam] = 0x00000030
+0EFC:00088109: mov.16 [rParam+0x8] = 0x0820
+0F04:0000821F: call -> [0x0] setCellContent
+0F0C:0000820D: add.32 [rParam] += 0x00000001
+0F14:0000820A: cmp.32 [rParam], 0x0000003A
+0F1C:0020820B: jmp.lt -> 0x00000EFC
+0F24:00008209: mov.32 [rParam] = 0x0000000E
+0F2C:00088109: mov.16 [rParam+0x8] = 0x043A
+0F34:0000821F: call -> [0x0] setCellContent
+0F3C:0000820D: add.32 [rParam] += 0x00000006
+0F44:0000820A: cmp.32 [rParam], 0x0000003D
+0F4C:001C820B: jmp.le -> 0x00000F2C
+0F54:00008209: mov.32 [rParam] = 0x00000001
+0F5C:00088109: mov.16 [rParam+0x8] = 0x0730
+0F64:0000821F: call -> [0x0] setCellContent
+0F6C:0000820D: add.32 [rParam] += 0x00000001
+0F74:0000820A: cmp.32 [rParam], 0x00000002
+0F7C:0020820B: jmp.lt -> 0x00000F5C
+0F84:00008209: mov.32 [rParam] = 0x00000003
+0F8C:00088109: mov.16 [rParam+0x8] = 0x0F30
+0F94:0000821F: call -> [0x0] setCellContent
+0F9C:0000820D: add.32 [rParam] += 0x00000001
+0FA4:0000820A: cmp.32 [rParam], 0x00000004
+0FAC:0020820B: jmp.lt -> 0x00000F8C
+0FB4:00008209: mov.32 [rParam] = 0x00000005
+0FBC:00088109: mov.16 [rParam+0x8] = 0x0C20
+0FC4:0000821F: call -> [0x0] setCellContent
+0FCC:0000820D: add.32 [rParam] += 0x00000001
+0FD4:0000820A: cmp.32 [rParam], 0x00000006
+0FDC:0020820B: jmp.lt -> 0x00000FBC
+0FE4:00008209: mov.32 [rParam] = 0x00000007
+0FEC:00088109: mov.16 [rParam+0x8] = 0x0420
+0FF4:0000821F: call -> [0x0] setCellContent
+0FFC:0000820D: add.32 [rParam] += 0x00000001
+1004:0000820A: cmp.32 [rParam], 0x00000008
+100C:0020820B: jmp.lt -> 0x00000FEC
+1014:0028820D: add.32 [rParam+0x28] += 0x00000001
+101C:0028820A: cmp.32 [rParam+0x28], 0x00000019
+1024:001C820B: jmp.le -> 0x00000E38
+102C:00000020: ret
+
+loadingScreen:
+1030:00008209: mov.32 [rParam] = 0x00000720
+1038:0000821F: call -> [0x0] sub_1BC
+1040:00008109: mov.16 [rParam] = 0x0000
+1048:00028109: mov.16 [rParam+0x2] = 0x0001
+1050:0000821F: call -> [0x0] setCursorPos
+1058:00000210: xor.32 [rParam] ^= [rParam]
+105C:0000BA09: mov.32 [rText+[rParam]] = 0x046B0753
+1064:0400800D: add.8 [rParam] += 0x04
+1068:0000BA09: mov.32 [rText+[rParam]] = 0x046C0475
+1070:0400800D: add.8 [rParam] += 0x04
+1074:0000BA09: mov.32 [rText+[rParam]] = 0x0463046C
+107C:0400800D: add.8 [rParam] += 0x04
+1080:0000BA09: mov.32 [rText+[rParam]] = 0x0464046F
+1088:0400800D: add.8 [rParam] += 0x04
+108C:0000BA09: mov.32 [rText+[rParam]] = 0x04200465
+1094:0400800D: add.8 [rParam] += 0x04
+1098:0000BA09: mov.32 [rText+[rParam]] = 0x046F074C
+10A0:0400800D: add.8 [rParam] += 0x04
+10A4:0000BA09: mov.32 [rText+[rParam]] = 0x04640461
+10AC:0400800D: add.8 [rParam] += 0x04
+10B0:0000BA09: mov.32 [rText+[rParam]] = 0x046E0469
+10B8:0400800D: add.8 [rParam] += 0x04
+10BC:0000BA09: mov.32 [rText+[rParam]] = 0x04000467
+10C4:0400800D: add.8 [rParam] += 0x04
+10C8:0000BA09: mov.32 [rText+[rParam]] = 0x04200420
+10D0:0000821F: call -> [0x0] requestRedraw
+10D8:0000022A: dtime [rParam]
+10DC:00048209: mov.32 [rParam+0x4] = 0x00000000
+10E4:00008102: wait 0x0200
+10EC:0000022A: dtime [rParam]
+10F0:0004020D: add.32 [rParam+0x4] += [rParam]
+10F4:0004820A: cmp.32 [rParam+0x4], 0x00000200
+10FC:001C820B: jmp.le -> 0x000010E4
+1104:00000020: ret
+
+main:
+1108:0000821F: call -> [0x0] 0x000014A8
+1110:0000821F: call -> [0x0] resetDisplay
+1118:0000821F: call -> [0x0] resetInput
+1120:00008209: mov.32 [rParam] = 0x0D010208
+1128:0000821F: call -> [0x0] setCursorRect
+1130:0000821F: call -> [0x0] loadingScreen
+1138:00000210: xor.32 [rParam] ^= [rParam]
+113C:00040209: mov.32 [rParam+0x4] = [rParam]
+1140:00009A09: mov.32 [rHeap+[rParam]] = 0x00000600
+1148:0400800D: add.8 [rParam] += 0x04
+114C:00009A09: mov.32 [rHeap+[rParam]] = 0x00000066
+1154:0400800D: add.8 [rParam] += 0x04
+1158:F0009809: mov.8 [rHeap+[rParam]] = 0xF0
+115C:0400800D: add.8 [rParam] += 0x04
+1160:04001A09: mov.32 [rHeap+[rParam]] = [rParam+0x4]
+1164:0400800D: add.8 [rParam] += 0x04
+1168:04001A09: mov.32 [rHeap+[rParam]] = [rParam+0x4]
+116C:0400800D: add.8 [rParam] += 0x04
+1170:0000821F: call -> [0x0] sub_E20
+1178:0000821F: call -> [0x0] 0x000015E4
+1180:0000821F: call -> [0x0] 0x000017E8
+1188:28280210: xor.32 [rParam+0x28] ^= [rParam+0x28]
+118C:282C0209: mov.32 [rParam+0x2C] = [rParam+0x28]
+1190:2C2C1209: mov.32 [rParam+0x2C] = [rHeap+[rParam+0x2C]]
+1194:00008209: mov.32 [rParam] = 0x00000001
+119C:28040209: mov.32 [rParam+0x4] = [rParam+0x28]
+11A0:2C080209: mov.32 [rParam+0x8] = [rParam+0x2C]
+11A4:18088215: shr.32 [rParam+0x8] >>>= 0x18
+11A8:0000821F: call -> [0x0] sub_328
+11B0:2C080209: mov.32 [rParam+0x8] = [rParam+0x2C]
+11B4:10088215: shr.32 [rParam+0x8] >>>= 0x10
+11B8:0000820D: add.32 [rParam] += 0x00000002
+11C0:0000821F: call -> [0x0] sub_328
+11C8:2C080209: mov.32 [rParam+0x8] = [rParam+0x2C]
+11CC:08088215: shr.32 [rParam+0x8] >>>= 0x08
+11D0:0000820D: add.32 [rParam] += 0x00000002
+11D8:0000821F: call -> [0x0] sub_328
+11E0:2C080209: mov.32 [rParam+0x8] = [rParam+0x2C]
+11E4:0000820D: add.32 [rParam] += 0x00000002
+11EC:0000821F: call -> [0x0] sub_328
+11F4:00008209: mov.32 [rParam] = 0x0000000C
+11FC:28040209: mov.32 [rParam+0x4] = [rParam+0x28]
+1200:2C080209: mov.32 [rParam+0x8] = [rParam+0x2C]
+1204:000C8209: mov.32 [rParam+0xC] = 0x00000010
+120C:0000821F: call -> [0x0] sub_3A8
+1214:00008209: mov.32 [rParam] = 0x0000003E
+121C:28040209: mov.32 [rParam+0x4] = [rParam+0x28]
+1220:2C080209: mov.32 [rParam+0x8] = [rParam+0x2C]
+1224:2C0C0209: mov.32 [rParam+0xC] = [rParam+0x2C]
+1228:003C8209: mov.32 [rParam+0x3C] = 0x00000042
+1230:2C087209: mov.32 [rParam+0x8] = [[rParam+0x2C]]
+1234:0000821F: call -> [0x0] setCellChar
+123C:0000820D: add.32 [rParam] += 0x00000001
+1244:08088215: shr.32 [rParam+0x8] >>>= 0x08
+1248:3C00020A: cmp.32 [rParam], [rParam+0x3C]
+124C:001C820B: jmp.le -> 0x00001234
+1254:002C820D: add.32 [rParam+0x2C] += 0x00000004
+125C:003C820D: add.32 [rParam+0x3C] += 0x00000004
+1264:2C087209: mov.32 [rParam+0x8] = [[rParam+0x2C]]
+1268:0000820A: cmp.32 [rParam], 0x0000004B
+1270:001C820B: jmp.le -> 0x00001234
+1278:0028820D: add.32 [rParam+0x28] += 0x00000001
+1280:0028820A: cmp.32 [rParam+0x28], 0x00000019
+1288:001C820B: jmp.le -> 0x00001194
+1290:0000821F: call -> [0x0] drawCellHighlight
+1298:0000821F: call -> [0x0] drawCellMouse
+12A0:0000821F: call -> [0x0] requestRedraw
+12A8:00048209: mov.32 [rParam+0x4] = 0x0000001C
+12B0:00049A0A: cmp.32 [rHeap+[rParam+0x4]], 0x00000000
+12B8:0004820B: jmp.eq -> 0x000012E0
+12C0:0400121F: call -> [0x0] [rHeap+[rParam+0x4]]
+12C4:00008002: wait 0x00
+12C8:0001821F: call -> [0x4] resetCellHighlight
+12D0:0001821F: call -> [0x4] resetCellMouse
+12D8:0000820B: jmp.al -> 0x00001188
+
+12E0:0000821F: call -> [0x0] waitInput
+12E8:0001821F: call -> [0x4] resetCellHighlight
+12F0:0001821F: call -> [0x4] resetCellMouse
+12F8:0000821F: call -> [0x0] sub_718
+1300:0000820A: cmp.32 [rParam], 0x00000000
+1308:0018820B: jmp.ne -> 0x00001178
+1310:0000820B: jmp.al -> 0x00001290
+
+1318:00008209: mov.32 [rParam] = 0x00000018
+1320:00041209: mov.32 [rParam+0x4] = [rHeap+[rParam]]
+1324:0004820A: cmp.32 [rParam+0x4], 0xFFFFFFFF
+132C:0004820B: jmp.eq -> 0x000013B4
+1334:00048211: and.32 [rParam+0x4] &= 0x7FFFFFFF
+133C:0004820A: cmp.32 [rParam+0x4], 0x00000000
+1344:0004820B: jmp.eq -> 0x000013B4
+134C:000C8209: mov.32 [rParam+0xC] = 0x00000000
+1354:00008209: mov.32 [rParam] = 0x00000018
+135C:00009A0D: add.32 [rHeap+[rParam]] += 0x00000004
+1364:00009A0A: cmp.32 [rHeap+[rParam]], 0x00000FB0
+136C:0024820B: jmp.ge -> 0x00001494
+1374:00001209: mov.32 [rParam] = [rHeap+[rParam]]
+1378:0000820D: add.32 [rParam] += 0x00000040
+1380:00047209: mov.32 [rParam+0x4] = [[rParam]]
+1384:00048211: and.32 [rParam+0x4] &= 0x00FF00FF
+138C:00048212: or.32 [rParam+0x4] |= 0x04000400
+1394:04007A09: mov.32 [[rParam]] = [rParam+0x4]
+1398:000C820D: add.32 [rParam+0xC] += 0x00000001
+13A0:000C820A: cmp.32 [rParam+0xC], 0x00000014
+13A8:0020820B: jmp.lt -> 0x00001354
+13B0:00000020: ret
+
+13B4:00009A09: mov.32 [rHeap+[rParam]] = 0x0000000C
+13BC:00108209: mov.32 [rParam+0x10] = 0x00001CF0
+13C4:0010820D: add.32 [rParam+0x10] += 0x00004400
+13CC:10040209: mov.32 [rParam+0x4] = [rParam+0x10]
+13D0:00048211: and.32 [rParam+0x4] &= 0x0000000F
+13D8:000C8209: mov.32 [rParam+0xC] = 0x00000010
+13E0:040C020E: sub.32 [rParam+0xC] -= [rParam+0x4]
+13E4:000C8211: and.32 [rParam+0xC] &= 0x0000000F
+13EC:0C10020D: add.32 [rParam+0x10] += [rParam+0xC]
+13F0:00048209: mov.32 [rParam+0x4] = 0x00000000
+13F8:0010820D: add.32 [rParam+0x10] += 0x00000010
+1400:10041A09: mov.32 [rHeap+[rParam+0x4]] = [rParam+0x10]
+1404:00208409: mov.128 [rParam+0x20] = 0x11AE33EAE16B9EA2161A749DF4692E3B
+1418:0010FC09: mov.128 [[rParam+0x10]] = 0x61CB56A18804D982361A13F3D4490E1B
+142C:20107C10: xor.128 [[rParam+0x10]] ^= [rParam+0x20]
+1430:0010820D: add.32 [rParam+0x10] += 0x00000010
+1438:0010FC09: mov.128 [[rParam+0x10]] = 0xE85613CAC14BBE8C363A54BDD4490E1B
+144C:20107C10: xor.128 [[rParam+0x10]] ^= [rParam+0x20]
+1450:0010820D: add.32 [rParam+0x10] += 0x00000070
+1458:0010FC09: mov.128 [[rParam+0x10]] = 0x20202020202020202020202020202020
+146C:00008209: mov.32 [rParam] = 0x00000004
+1474:00009A09: mov.32 [rHeap+[rParam]] = 0x00000080
+147C:0400800D: add.8 [rParam] += 0x04
+1480:FF009809: mov.8 [rHeap+[rParam]] = 0xFF
+1484:1C008009: mov.8 [rParam] = 0x1C
+1488:00009A09: mov.32 [rHeap+[rParam]] = 0x00001318
+1490:00000020: ret
+
+1494:00008209: mov.32 [rParam] = 0x0000001C
+149C:00009A09: mov.32 [rHeap+[rParam]] = 0x00000000
+14A4:00000020: ret
+
+14A8:00008209: mov.32 [rParam] = 0x00006600
+14B0:00000004: clrfing
+14B4:00208403: finger.128 [rParam+0x20], 0x3AC7134A7E385B8A69BB34E75033B692
+14C8:00108409: mov.128 [rParam+0x10] = 0xE49CDD0825507596328E8A1D975E8881
+14DC:20100410: xor.128 [rParam+0x10] ^= [rParam+0x20]
+14E0:10007C09: mov.128 [[rParam]] = [rParam+0x10]
+14E4:5000800D: add.8 [rParam] += 0x50
+14E8:10007C09: mov.128 [[rParam]] = [rParam+0x10]
+14EC:2000800D: add.8 [rParam] += 0x20
+14F0:10007C09: mov.128 [[rParam]] = [rParam+0x10]
+14F4:6000800E: sub.8 [rParam] -= 0x60
+14F8:10200403: finger.128 [rParam+0x20], [rParam+0x10]
+14FC:00108409: mov.128 [rParam+0x10] = 0xF96C6A5B946195A1ACFF23472107B0B5
+1510:20100410: xor.128 [rParam+0x10] ^= [rParam+0x20]
+1514:10007C09: mov.128 [[rParam]] = [rParam+0x10]
+1518:1000800D: add.8 [rParam] += 0x10
+151C:10200403: finger.128 [rParam+0x20], [rParam+0x10]
+1520:00108409: mov.128 [rParam+0x10] = 0x52A94D9D14863D57A5163F9C685732B4
+1534:20100410: xor.128 [rParam+0x10] ^= [rParam+0x20]
+1538:10007C09: mov.128 [[rParam]] = [rParam+0x10]
+153C:1000800D: add.8 [rParam] += 0x10
+1540:10200403: finger.128 [rParam+0x20], [rParam+0x10]
+1544:00108409: mov.128 [rParam+0x10] = 0x718A9E3762D1C7591FAEA91989F43C77
+1558:20100410: xor.128 [rParam+0x10] ^= [rParam+0x20]
+155C:10007C09: mov.128 [[rParam]] = [rParam+0x10]
+1560:1000800D: add.8 [rParam] += 0x10
+1564:10200403: finger.128 [rParam+0x20], [rParam+0x10]
+1568:00108409: mov.128 [rParam+0x10] = 0xB771B880AB471002A8F12CC1057B2D9B
+157C:20100410: xor.128 [rParam+0x10] ^= [rParam+0x20]
+1580:10007C09: mov.128 [[rParam]] = [rParam+0x10]
+1584:2000800D: add.8 [rParam] += 0x20
+1588:10200403: finger.128 [rParam+0x20], [rParam+0x10]
+158C:00108409: mov.128 [rParam+0x10] = 0x0C079358F1437B9873EC2D68EA20D048
+15A0:20100410: xor.128 [rParam+0x10] ^= [rParam+0x20]
+15A4:10007C09: mov.128 [[rParam]] = [rParam+0x10]
+15A8:00008209: mov.32 [rParam] = 0x0000664C
+15B0:0000FA09: mov.32 [[rParam]] = 0x00001624
+15B8:0000FA0D: add.32 [[rParam]] += 0x00004400
+15C0:00008209: mov.32 [rParam] = 0x00000018
+15C8:00009A09: mov.32 [rHeap+[rParam]] = 0x00000000
+15D0:00008209: mov.32 [rParam] = 0x0000001C
+15D8:00009A09: mov.32 [rHeap+[rParam]] = 0x00000000
+15E0:00000020: ret
+
+15E4:00008209: mov.32 [rParam] = 0x00006666
+15EC:00047009: mov.8 [rParam+0x4] = [[rParam]]
+15F0:DF048011: and.8 [rParam+0x4] &= 0xDF
+15F4:0004800A: cmp.8 [rParam+0x4], 0x00
+15F8:0018820B: jmp.ne -> 0x00001620
+1600:2100F809: mov.8 [[rParam]] = 0x21
+1604:00008209: mov.32 [rParam] = 0x0000664C
+160C:00007209: mov.32 [rParam] = [[rParam]]
+1610:0000820E: sub.32 [rParam] -= 0x00004400
+1618:04118012: or.8 [rParam+0x11] |= 0x04
+161C:0000021F: call -> [0x0] [rParam]
+1620:00000020: ret
+
+1624:00008209: mov.32 [rParam] = 0x00000018
+162C:00009A0A: cmp.32 [rHeap+[rParam]], 0x00000000
+1634:0018820B: jmp.ne -> 0x00001738
+163C:00048209: mov.32 [rParam+0x4] = 0x00000019
+1644:00008209: mov.32 [rParam] = 0x00000042
+164C:00088109: mov.16 [rParam+0x8] = 0x0701
+1654:0000821F: call -> [0x0] setCellColor
+165C:0000820D: add.32 [rParam] += 0x00000001
+1664:0000820A: cmp.32 [rParam], 0x00000045
+166C:0020820B: jmp.lt -> 0x0000164C
+1674:00008209: mov.32 [rParam] = 0x0000003E
+167C:00088109: mov.16 [rParam+0x8] = 0x0801
+1684:0000821F: call -> [0x0] setCellColor
+168C:0000820D: add.32 [rParam] += 0x00000001
+1694:0000820A: cmp.32 [rParam], 0x00000040
+169C:0020820B: jmp.lt -> 0x0000167C
+16A4:0004820E: sub.32 [rParam+0x4] -= 0x00000001
+16AC:0004820A: cmp.32 [rParam+0x4], 0x00000000
+16B4:0014820B: jmp.gt_u -> 0x00001644
+16BC:00108209: mov.32 [rParam+0x10] = 0x00001CF0
+16C4:0010820D: add.32 [rParam+0x10] += 0x00004400
+16CC:10040209: mov.32 [rParam+0x4] = [rParam+0x10]
+16D0:00048211: and.32 [rParam+0x4] &= 0x0000000F
+16D8:000C8209: mov.32 [rParam+0xC] = 0x00000010
+16E0:040C020E: sub.32 [rParam+0xC] -= [rParam+0x4]
+16E4:000C8211: and.32 [rParam+0xC] &= 0x0000000F
+16EC:0C10020D: add.32 [rParam+0x10] += [rParam+0xC]
+16F0:0010820D: add.32 [rParam+0x10] += 0x00000030
+16F8:00000210: xor.32 [rParam] ^= [rParam]
+16FC:10001A09: mov.32 [rHeap+[rParam]] = [rParam+0x10]
+1700:0000820D: add.32 [rParam] += 0x00000004
+1708:00009A09: mov.32 [rHeap+[rParam]] = 0x00000060
+1710:0000820D: add.32 [rParam] += 0x00000004
+1718:00009A09: mov.32 [rHeap+[rParam]] = 0x000000FF
+1720:0000821F: call -> [0x0] requestRedraw
+1728:00008209: mov.32 [rParam] = 0x0000001C
+1730:00009A09: mov.32 [rHeap+[rParam]] = 0x00001A9C
+1738:00000020: ret
+
+173C:00008209: mov.32 [rParam] = 0x00000018
+1744:00041209: mov.32 [rParam+0x4] = [rHeap+[rParam]]
+1748:00048211: and.32 [rParam+0x4] &= 0x80000000
+1750:0004820A: cmp.32 [rParam+0x4], 0x00000000
+1758:0004820B: jmp.eq -> 0x000017D4
+1760:00108209: mov.32 [rParam+0x10] = 0x00001CF0
+1768:0010820D: add.32 [rParam+0x10] += 0x00004400
+1770:10040209: mov.32 [rParam+0x4] = [rParam+0x10]
+1774:00048211: and.32 [rParam+0x4] &= 0x0000000F
+177C:000C8209: mov.32 [rParam+0xC] = 0x00000010
+1784:040C020E: sub.32 [rParam+0xC] -= [rParam+0x4]
+1788:000C8211: and.32 [rParam+0xC] &= 0x0000000F
+1790:0C10020D: add.32 [rParam+0x10] += [rParam+0xC]
+1794:0010820D: add.32 [rParam+0x10] += 0x00000090
+179C:00208209: mov.32 [rParam+0x20] = 0x00000020
+17A4:20301403: finger.128 [rParam+0x30], [rHeap+[rParam+0x20]]
+17A8:30107C10: xor.128 [[rParam+0x10]] ^= [rParam+0x30]
+17AC:30201C09: mov.128 [rHeap+[rParam+0x20]] = [rParam+0x30]
+17B0:00008209: mov.32 [rParam] = 0x00000018
+17B8:00009A0D: add.32 [rHeap+[rParam]] += 0x00000001
+17C0:00009A0A: cmp.32 [rHeap+[rParam]], 0x80000100
+17C8:0024820B: jmp.ge -> 0x000017D4
+17D0:00000020: ret
+
+17D4:00008209: mov.32 [rParam] = 0x0000001C
+17DC:00009A09: mov.32 [rHeap+[rParam]] = 0x00000000
+17E4:00000020: ret
+
+17E8:00008209: mov.32 [rParam] = 0x00000018
+17F0:00041209: mov.32 [rParam+0x4] = [rHeap+[rParam]]
+17F4:00048211: and.32 [rParam+0x4] &= 0x80000000
+17FC:0004820A: cmp.32 [rParam+0x4], 0x00000000
+1804:0004820B: jmp.eq -> 0x000019AC
+180C:00108209: mov.32 [rParam+0x10] = 0x00001CF0
+1814:0010820D: add.32 [rParam+0x10] += 0x00004400
+181C:10040209: mov.32 [rParam+0x4] = [rParam+0x10]
+1820:00048211: and.32 [rParam+0x4] &= 0x0000000F
+1828:000C8209: mov.32 [rParam+0xC] = 0x00000010
+1830:040C020E: sub.32 [rParam+0xC] -= [rParam+0x4]
+1834:000C8211: and.32 [rParam+0xC] &= 0x0000000F
+183C:0C10020D: add.32 [rParam+0x10] += [rParam+0xC]
+1840:10000209: mov.32 [rParam] = [rParam+0x10]
+1844:0000820D: add.32 [rParam] += 0x00000090
+184C:10207409: mov.128 [rParam+0x20] = [[rParam+0x10]]
+1850:20007C0A: cmp.128 [[rParam]], [rParam+0x20]
+1854:0018820B: jmp.ne -> 0x00001890
+185C:0000820E: sub.32 [rParam] -= 0x0000000C
+1864:0000FA09: mov.32 [[rParam]] = 0x3FB5CDCD
+186C:0000820D: add.32 [rParam] += 0x00000004
+1874:0000FA09: mov.32 [[rParam]] = 0xCACDCDC6
+187C:00008209: mov.32 [rParam] = 0x00000018
+1884:00009A09: mov.32 [rHeap+[rParam]] = 0xFFFFFFFF
+188C:00000020: ret
+
+1890:00308209: mov.32 [rParam+0x30] = 0x00000018
+1898:00309A0A: cmp.32 [rHeap+[rParam+0x30]], 0xFFFFFFFF
+18A0:0018820B: jmp.ne -> 0x000018D4
+18A8:00309A09: mov.32 [rHeap+[rParam+0x30]] = 0x80000000
+18B0:0000820E: sub.32 [rParam] -= 0x0000000C
+18B8:0000FA09: mov.32 [[rParam]] = 0x215BCDCD
+18C0:0000820D: add.32 [rParam] += 0x00000004
+18C8:0000FA09: mov.32 [[rParam]] = 0xCACDCD5D
+18D0:00000020: ret
+
+18D4:10000209: mov.32 [rParam] = [rParam+0x10]
+18D8:0000820D: add.32 [rParam] += 0x00000087
+18E0:000C7009: mov.8 [rParam+0xC] = [[rParam]]
+18E4:DF0C8011: and.8 [rParam+0xC] &= 0xDF
+18E8:000C800A: cmp.8 [rParam+0xC], 0x00
+18EC:0018820B: jmp.ne -> 0x000019AC
+18F4:2100F809: mov.8 [[rParam]] = 0x21
+18F8:10000209: mov.32 [rParam] = [rParam+0x10]
+18FC:0000820D: add.32 [rParam] += 0x00000090
+1904:00207409: mov.128 [rParam+0x20] = [[rParam]]
+1908:00000004: clrfing
+190C:00108209: mov.32 [rParam+0x10] = 0x00000020
+1914:20101C09: mov.128 [rHeap+[rParam+0x10]] = [rParam+0x20]
+1918:00008209: mov.32 [rParam] = 0x00000018
+1920:00009A09: mov.32 [rHeap+[rParam]] = 0x80000000
+1928:00008209: mov.32 [rParam] = 0x0000001C
+1930:00009A09: mov.32 [rHeap+[rParam]] = 0x000019B0
+1938:00008209: mov.32 [rParam] = 0x00000004
+1940:00009A09: mov.32 [rHeap+[rParam]] = 0x00000090
+1948:00108209: mov.32 [rParam+0x10] = 0x00001CF0
+1950:0010820D: add.32 [rParam+0x10] += 0x00004400
+1958:10040209: mov.32 [rParam+0x4] = [rParam+0x10]
+195C:00048211: and.32 [rParam+0x4] &= 0x0000000F
+1964:000C8209: mov.32 [rParam+0xC] = 0x00000010
+196C:040C020E: sub.32 [rParam+0xC] -= [rParam+0x4]
+1970:000C8211: and.32 [rParam+0xC] &= 0x0000000F
+1978:0C10020D: add.32 [rParam+0x10] += [rParam+0xC]
+197C:10000209: mov.32 [rParam] = [rParam+0x10]
+1980:00208209: mov.32 [rParam+0x20] = 0x20202020
+1988:20240209: mov.32 [rParam+0x24] = [rParam+0x20]
+198C:20280309: mov.64 [rParam+0x28] = [rParam+0x20]
+1990:20007C09: mov.128 [[rParam]] = [rParam+0x20]
+1994:0000820D: add.32 [rParam] += 0x00000010
+199C:20007C09: mov.128 [[rParam]] = [rParam+0x20]
+19A0:0000820D: add.32 [rParam] += 0x00000010
+19A8:20007C09: mov.128 [[rParam]] = [rParam+0x20]
+19AC:00000020: ret
+
+19B0:00108209: mov.32 [rParam+0x10] = 0x00001CF0
+19B8:0010820D: add.32 [rParam+0x10] += 0x00004400
+19C0:10040209: mov.32 [rParam+0x4] = [rParam+0x10]
+19C4:00048211: and.32 [rParam+0x4] &= 0x0000000F
+19CC:000C8209: mov.32 [rParam+0xC] = 0x00000010
+19D4:040C020E: sub.32 [rParam+0xC] -= [rParam+0x4]
+19D8:000C8211: and.32 [rParam+0xC] &= 0x0000000F
+19E0:0C10020D: add.32 [rParam+0x10] += [rParam+0xC]
+19E4:10000209: mov.32 [rParam] = [rParam+0x10]
+19E8:0000820D: add.32 [rParam] += 0x00000090
+19F0:00208209: mov.32 [rParam+0x20] = 0x00000020
+19F8:20301403: finger.128 [rParam+0x30], [rHeap+[rParam+0x20]]
+19FC:30201C09: mov.128 [rHeap+[rParam+0x20]] = [rParam+0x30]
+1A00:00008209: mov.32 [rParam] = 0x00000018
+1A08:00009A0D: add.32 [rHeap+[rParam]] += 0x00000004
+1A10:00001209: mov.32 [rParam] = [rHeap+[rParam]]
+1A14:00008211: and.32 [rParam] &= 0x7FFFFFFF
+1A1C:0000820A: cmp.32 [rParam], 0x000003F4
+1A24:0024820B: jmp.ge -> 0x00001A64
+1A2C:0000820E: sub.32 [rParam] -= 0x00000004
+1A34:1000020D: add.32 [rParam] += [rParam+0x10]
+1A38:00048209: mov.32 [rParam+0x4] = 0x00000000
+1A40:00041A09: mov.32 [rHeap+[rParam+0x4]] = [rParam]
+1A44:00049A11: and.32 [rHeap+[rParam+0x4]] &= 0xFFFFFFF0
+1A4C:00049A0D: add.32 [rHeap+[rParam+0x4]] += 0x00000030
+1A54:0000820D: add.32 [rParam] += 0x000000C0
+1A5C:30007C10: xor.128 [[rParam]] ^= [rParam+0x30]
+1A60:00000020: ret
+
+1A64:00008209: mov.32 [rParam] = 0x0000001C
+1A6C:00009A09: mov.32 [rHeap+[rParam]] = 0x00000000
+1A74:00008209: mov.32 [rParam] = 0x00000018
+1A7C:00009A09: mov.32 [rHeap+[rParam]] = 0x80000000
+1A84:00008209: mov.32 [rParam] = 0x00000000
+1A8C:10001A09: mov.32 [rHeap+[rParam]] = [rParam+0x10]
+1A90:00009A0D: add.32 [rHeap+[rParam]] += 0x00000030
+1A98:00000020: ret
+
+1A9C:00008209: mov.32 [rParam] = 0x00000018
+1AA4:00009A0A: cmp.32 [rHeap+[rParam]], 0x00000000
+1AAC:0018820B: jmp.ne -> 0x00001AE0
+1AB4:00000004: clrfing
+1AB8:00208403: finger.128 [rParam+0x20], 0x2455D071E41E74FD7844AF04122E512B
+1ACC:00108209: mov.32 [rParam+0x10] = 0x00000020
+1AD4:20101C09: mov.128 [rHeap+[rParam+0x10]] = [rParam+0x20]
+1AD8:00009A09: mov.32 [rHeap+[rParam]] = 0x00000001
+1AE0:00108209: mov.32 [rParam+0x10] = 0x00000020
+1AE8:10201409: mov.128 [rParam+0x20] = [rHeap+[rParam+0x10]]
+1AEC:00108209: mov.32 [rParam+0x10] = 0x00001CF0
+1AF4:0010820D: add.32 [rParam+0x10] += 0x00004400
+1AFC:10040209: mov.32 [rParam+0x4] = [rParam+0x10]
+1B00:00048211: and.32 [rParam+0x4] &= 0x0000000F
+1B08:000C8209: mov.32 [rParam+0xC] = 0x00000010
+1B10:040C020E: sub.32 [rParam+0xC] -= [rParam+0x4]
+1B14:000C8211: and.32 [rParam+0xC] &= 0x0000000F
+1B1C:0C10020D: add.32 [rParam+0x10] += [rParam+0xC]
+1B20:000C1209: mov.32 [rParam+0xC] = [rHeap+[rParam]]
+1B24:00009A0D: add.32 [rHeap+[rParam]] += 0x00000001
+1B2C:000C821C: mod.32 [rParam+0xC] %= 0x0000000D
+1B34:000C820A: cmp.32 [rParam+0xC], 0x0000000C
+1B3C:0018820B: jmp.ne -> 0x00001B48
+1B44:00000020: ret
+
+1B48:040C8213: shl.32 [rParam+0xC] <<= 0x04
+1B4C:0C10020D: add.32 [rParam+0x10] += [rParam+0xC]
+1B50:00041209: mov.32 [rParam+0x4] = [rHeap+[rParam]]
+1B54:00048211: and.32 [rParam+0x4] &= 0x00000001
+1B5C:0004820A: cmp.32 [rParam+0x4], 0x00000000
+1B64:0004820B: jmp.eq -> 0x00001B88
+1B6C:00208411: and.128 [rParam+0x20] &= 0xFF00FF00FF00FF00FF00FF00FF00FF00
+1B80:0000820B: jmp.al -> 0x00001B9C
+
+1B88:00208411: and.128 [rParam+0x20] &= 0x00FF00FF00FF00FF00FF00FF00FF00FF
+1B9C:20107C10: xor.128 [[rParam+0x10]] ^= [rParam+0x20]
+1BA0:00009A0A: cmp.32 [rHeap+[rParam]], 0x00000078
+1BA8:001C820B: jmp.le -> 0x00001BD0
+1BB0:00008209: mov.32 [rParam] = 0x0000001C
+1BB8:00009A09: mov.32 [rHeap+[rParam]] = 0x00000000
+1BC0:0400800E: sub.8 [rParam] -= 0x04
+1BC4:00009A09: mov.32 [rHeap+[rParam]] = 0xFFFFFFFF
+1BCC:00000020: ret
+
+1BD0:20200403: finger.128 [rParam+0x20], [rParam+0x20]
+1BD4:00108209: mov.32 [rParam+0x10] = 0x00000020
+1BDC:20101C09: mov.128 [rHeap+[rParam+0x10]] = [rParam+0x20]
+1BE0:00000020: ret
+
+1BE4:00008209: mov.32 [rParam] = 0x00000018
+1BEC:00041209: mov.32 [rParam+0x4] = [rHeap+[rParam]]
+1BF0:00048211: and.32 [rParam+0x4] &= 0x80000000
+1BF8:0004820A: cmp.32 [rParam+0x4], 0x00000000
+1C00:0004820B: jmp.eq -> 0x00001CEC
+1C08:00108209: mov.32 [rParam+0x10] = 0x00001CF0
+1C10:0010820D: add.32 [rParam+0x10] += 0x00004400
+1C18:10040209: mov.32 [rParam+0x4] = [rParam+0x10]
+1C1C:00048211: and.32 [rParam+0x4] &= 0x0000000F
+1C24:000C8209: mov.32 [rParam+0xC] = 0x00000010
+1C2C:040C020E: sub.32 [rParam+0xC] -= [rParam+0x4]
+1C30:000C8211: and.32 [rParam+0xC] &= 0x0000000F
+1C38:0C10020D: add.32 [rParam+0x10] += [rParam+0xC]
+1C3C:0010820D: add.32 [rParam+0x10] += 0x00000010
+1C44:00208409: mov.128 [rParam+0x20] = 0x11AE33EAE16B9EA2161A749DF4692E3B
+1C58:20107C09: mov.128 [[rParam+0x10]] = [rParam+0x20]
+1C5C:0010FC10: xor.128 [[rParam+0x10]] ^= 0x309F12CBD04ABF83363A54BDD4490E1B
+1C70:0010820D: add.32 [rParam+0x10] += 0x00000010
+1C78:20107C09: mov.128 [[rParam+0x10]] = [rParam+0x20]
+1C7C:0010FC10: xor.128 [[rParam+0x10]] ^= 0xE85613CAC14BBE8C363A54BDD4490E1B
+1C90:0010820D: add.32 [rParam+0x10] += 0x00000070
+1C98:0010FC09: mov.128 [[rParam+0x10]] = 0x7D5A12C2CDF1256599026690978151D0
+1CAC:00008209: mov.32 [rParam] = 0x00000000
+1CB4:0010820E: sub.32 [rParam+0x10] -= 0x00000060
+1CBC:10001A09: mov.32 [rHeap+[rParam]] = [rParam+0x10]
+1CC0:0400800D: add.8 [rParam] += 0x04
+1CC4:00009A09: mov.32 [rHeap+[rParam]] = 0x00000057
+1CCC:00008209: mov.32 [rParam] = 0x0000001C
+1CD4:00009A09: mov.32 [rHeap+[rParam]] = 0x0000173C
+1CDC:00000004: clrfing
+1CE0:00008209: mov.32 [rParam] = 0x00000020
+1CE8:20001C09: mov.128 [rHeap+[rParam]] = [rParam+0x20]
+1CEC:00000020: ret
+
+1CF0:5741F2AE: invalid opcode 174
+1CF4:C64CF1B4: invalid opcode 180
+1CF8:B635A5BE: invalid opcode 190
+1CFC:05C1FB08: mode 0x41297A24BE52B36D
+1D08:46F2CB25: invalid opcode 37
+1D0C:8ABA2A11: and.32 [rParam+[rParam+0xBA]] &= [rParam+0x8A]
+1D10:DDE72698: invalid opcode 152
+1D14:2724B18E: invalid opcode 142
+1D18:EDA12D7A: invalid opcode 122
+1D1C:A73E3BB6: invalid opcode 182
+1D20:270F0865: invalid opcode 101
+1D24:FB8AA366: invalid opcode 102
+1D28:1895124A: invalid opcode 74
+1D2C:ACAC19A5: invalid opcode 165
+1D30:49F51F35: invalid opcode 53
+1D34:887D5492: invalid opcode 146
+1D38:B84A3B3C: invalid opcode 60
+1D3C:B31A8F32: invalid opcode 50
+1D40:E0FC64A6: invalid opcode 166
+1D44:B48D7E24: invalid opcode 36
+1D48:06C58CD1: invalid opcode 209
+1D4C:1464F365: invalid opcode 101
+1D50:814DC6F8: invalid opcode 248
+1D54:6EB29035: invalid opcode 53
+1D58:B4F3F5A7: invalid opcode 167
+1D5C:76ADB9B3: invalid opcode 179
+1D60:3B8EBA0A: cmp.32 [rText+[rParam+0x8E]], E_INVALID
+1D64:03BC6A16: rol.32 [rCall+[rParam+0xBC]], [rParam+0x3]
+1D68:60A0E5AD: invalid opcode 173
+1D6C:CB96C192: invalid opcode 146
+1D70:9FB69C89: invalid opcode 137
+1D74:9A518062: invalid opcode 98
+1D78:002F2CEB: invalid opcode 235
+1D7C:A1856DDE: invalid opcode 222
+1D80:B77D722A: dtime [rParam+0x7D]
+1D84:6F018B4E: invalid opcode 78
+1D88:6FDAC910: xor.16 [rEntity+[rParam+0xDA]] ^= 0xD5A4
+1D90:2DC422A5: invalid opcode 165
+1D94:B62F14C2: invalid opcode 194
+1D98:FA51AFD7: invalid opcode 215
+1D9C:849C8581: invalid opcode 129
+1DA0:26AC6384: invalid opcode 132
+1DA4:2D6EA844: invalid opcode 68
+1DA8:F5E87D90: invalid opcode 144
+1DAC:C39116D1: invalid opcode 209
+1DB0:6CBE9F24: invalid opcode 36
+1DB4:B12A9886: invalid opcode 134
+1DB8:44D0306C: invalid opcode 108
+1DBC:3BD9308A: invalid opcode 138
+1DC0:EC54D380: invalid opcode 128
+1DC4:8B123E4E: invalid opcode 78
+1DC8:737E9639: invalid opcode 57
+1DCC:78D5BE4C: invalid opcode 76
+1DD0:B43DCCAF: invalid opcode 175
+1DD4:7AE0DF97: invalid opcode 151
+1DD8:0B3B08F3: invalid opcode 243
+1DDC:9705CD43: invalid opcode 67
+1DE0:B345F934: invalid opcode 52
+1DE4:80B961A7: invalid opcode 167
+1DE8:43BAA805: enhance.8 [rParam+[rParam+0xBA]]
+1DEC:229C40F0: invalid opcode 240
+1DF0:A83B491D: udiv.16 [rEntity+[rParam+0x3B]] /= [rParam+0xA8]
+1DF4:FE2E62E8: invalid opcode 232
+1DF8:0378AD75: invalid opcode 117
+1DFC:8DAA5795: invalid opcode 149
+1E00:DF854E21: invalid opcode 33
+1E04:986023F6: invalid opcode 246
+1E08:6109513E: invalid opcode 62
+1E0C:2290AD59: invalid opcode 89
+1E10:FC738638: invalid opcode 56
+1E14:F5FE533D: invalid opcode 61
+1E18:3678D6E6: invalid opcode 230
+1E1C:AECF8C49: invalid opcode 73
+1E20:193BEE6C: invalid opcode 108
+1E24:0F095288: invalid opcode 136
+1E28:AAD29538: invalid opcode 56
+1E2C:DBEC8436: invalid opcode 54
+1E30:EDCB5303: finger.64 [rParam+0xCB], [rCode+[rParam+0xED]]
+1E34:6193C0EC: invalid opcode 236
+1E38:2FB33AA6: invalid opcode 166
+1E3C:7A19F866: invalid opcode 102
+1E40:8FE0928E: invalid opcode 142
+1E44:5BA6A842: invalid opcode 66
+1E48:7E9EE1E7: invalid opcode 231
+1E4C:0FE474F1: invalid opcode 241
+1E50:F97FC17E: invalid opcode 126
+1E54:1B1F7DE4: invalid opcode 228
+1E58:90858EC1: invalid opcode 193
+1E5C:CE657718: ext.128 [rParam+0x65], [[rParam+0xCE]]
+1E60:113EF068: invalid opcode 104
+1E64:12201F1D: udiv.128 [rHeap+[rParam+0x20]] /= [rParam+0x12]
+1E68:33DB3158: invalid opcode 88
+1E6C:BA5B683A: invalid opcode 58
+1E70:32099440: invalid opcode 64
+1E74:BDD415AF: invalid opcode 175
+1E78:BFB3EBD5: invalid opcode 213
+1E7C:9D5963D0: invalid opcode 208
+1E80:58140FCB: invalid opcode 203
+1E84:FE62B50E: sub.flt [rParam+0x62] -= 427686456214326205152640398033682432.000000f
+1E8C:FAD63B46: invalid opcode 70
+1E90:70A31061: invalid opcode 97
+1E94:314F122C: invalid opcode 44
+1E98:1F729CAA: invalid opcode 170
+1E9C:4A8B0098: invalid opcode 152
+1EA0:2E7BEF32: invalid opcode 50
+1EA4:F55D95D0: invalid opcode 208
+1EA8:0A687368: invalid opcode 104
+1EAC:E328E8D3: invalid opcode 211
+1EB0:6BFC3454: invalid opcode 84
+1EB4:12DC2379: invalid opcode 121
+1EB8:E6162CBA: invalid opcode 186
+1EBC:A2BCB607: lock
+1EC0:41BCD4FC: invalid opcode 252
+1EC4:215B97EE: invalid opcode 238
+1EC8:51A149ED: invalid opcode 237
+1ECC:1ADB596C: invalid opcode 108
+1ED0:6CC0C7D1: invalid opcode 209
+1ED4:AB60E82D: invalid opcode 45
+1ED8:3B263EE9: invalid opcode 233
+1EDC:BC9FD895: invalid opcode 149
+1EE0:4D465E06: invalid opcode 6
+1EE4:F07B09ED: invalid opcode 237
+1EE8:07A1C640: invalid opcode 64
+1EEC:22849E2D: invalid opcode 45
+1EF0:C575DBEF: invalid opcode 239
+1EF4:E2388A02: wait E_INVALID
+1EF8:62CF3FBF: invalid opcode 191
+1EFC:3A4C99CD: invalid opcode 205
+1F00:6131F4CD: invalid opcode 205
+1F04:B4F156F1: invalid opcode 241
+1F08:5C083013: shl.8 [rParam+0x8] <<= [rText+[rParam+0x5C]]
+1F0C:25946752: invalid opcode 82
+1F10:8D57423F: invalid opcode 63
+1F14:450703FC: invalid opcode 252
+1F18:D7E242D7: invalid opcode 215
+1F1C:7382F32E: invalid opcode 46
+1F20:CD3FD8A7: invalid opcode 167
+1F24:7DEB6696: invalid opcode 150
+1F28:B068C17A: invalid opcode 122
+1F2C:E9E79AEA: invalid opcode 234
+1F30:C344E4F3: invalid opcode 243
+1F34:CFFDC7A4: invalid opcode 164
+1F38:66019AFA: invalid opcode 250
+1F3C:11BA9CA0: invalid opcode 160
+1F40:875D32E8: invalid opcode 232
+1F44:635BE68D: invalid opcode 141
+1F48:A2388C54: invalid opcode 84
+1F4C:D01CAE5E: invalid opcode 94
+1F50:4D997481: invalid opcode 129
+1F54:0B42ED47: invalid opcode 71
+1F58:0A394D16: rol.flt [rEntity+[rParam+0x39]], [rParam+0xA]
+1F5C:58894B4D: invalid opcode 77
+1F60:FAB45703: finger.128 [rParam+0xB4], [rCode+[rParam+0xFA]]
+1F64:602B118D: invalid opcode 141
+1F68:1D38F530: invalid opcode 48
+1F6C:25A0ED7C: invalid opcode 124
+1F70:FF717F32: invalid opcode 50
+1F74:88702D3B: invalid opcode 59
+1F78:39BE18FF: invalid opcode 255
+1F7C:E9A22208: mode [rParam+[rParam+0xE9]]
+1F80:EEAF6FF0: invalid opcode 240
+1F84:45AA521B: div.32 [rParam+0xAA] /= [rCode+[rParam+0x45]]
+1F88:1443D742: invalid opcode 66
+1F8C:D301945A: invalid opcode 90
+1F90:594ADB3E: invalid opcode 62
+1F94:AAE3D731: invalid opcode 49
+1F98:CCCDCE6C: invalid opcode 108
+1F9C:7823AFD8: invalid opcode 216
+1FA0:4AB93502: wait [rText+[rParam+0x4A]]
+1FA4:288C7152: invalid opcode 82
+1FA8:34A0CFEC: invalid opcode 236
+1FAC:EBD15645: invalid opcode 69
+1FB0:049E9790: invalid opcode 144
+1FB4:51D2F13F: invalid opcode 63
+1FB8:16593430: invalid opcode 48
+1FBC:D9302427: invalid opcode 39
+1FC0:79B51ABD: invalid opcode 189
+1FC4:7B68B07B: invalid opcode 123
+1FC8:49D1C91B: div.16 [rEntity+[rParam+0xD1]] /= 0x24FC
+1FD0:5514B662: invalid opcode 98
+1FD4:D33B7212: or.32 [rParam+0x3B] |= [[rParam+0xD3]]
+1FD8:AD9E01AF: invalid opcode 175
+1FDC:CDEFC915: shr.16 [rEntity+[rParam+0xEF]] >>>= 0xCD
+1FE0:0DC9133C: invalid opcode 60
+1FE4:EB28BE45: invalid opcode 69
+1FE8:336A00B8: invalid opcode 184
+1FEC:EA9A3D77: invalid opcode 119
+1FF0:BBDA2DF3: invalid opcode 243
+1FF4:24585676: invalid opcode 118
+1FF8:A57C4FFB: invalid opcode 251
+1FFC:1307C666: invalid opcode 102
+2000:EB26A216: rol.32 [rParam+0x26], 0xEB
+2004:274B9DA8: invalid opcode 168
+2008:BE283670: invalid opcode 112
+200C:809678E6: invalid opcode 230
+2010:690C0DA1: invalid opcode 161
+2014:4D644752: invalid opcode 82
+2018:E12FBD79: invalid opcode 121
+201C:981D7C54: invalid opcode 84
+2020:09BC2ECB: invalid opcode 203
+2024:CCBE4C40: invalid opcode 64
+2028:F58D8510: xor.flt [rParam+0x8D] ^= -59294679040.000000f
+2030:4760764F: invalid opcode 79
+2034:E7B61800: halt
+2038:20909A76: invalid opcode 118
+203C:616B32BD: invalid opcode 189
+2040:9BF94AF1: invalid opcode 241
+2044:AB3CFBD8: invalid opcode 216
+2048:64FB6FED: invalid opcode 237
+204C:0051B23A: invalid opcode 58
+2050:3836E1FF: invalid opcode 255
+2054:ADEFB3E9: invalid opcode 233
+2058:0626AB14: shrx.64 [rParam+[rParam+0x26]] >>= 0x06
+205C:BBB8C725: invalid opcode 37
+2060:F14F6959: invalid opcode 89
+2064:EF22C7DD: invalid opcode 221
+2068:DBE9A6D0: invalid opcode 208
+206C:AAFCF5D0: invalid opcode 208
+2070:0041FD46: invalid opcode 70
+2074:507945CB: invalid opcode 203
+2078:1349C3AC: invalid opcode 172
+207C:3B9FE7E1: invalid opcode 225
+2080:3A956154: invalid opcode 84
+2084:F9C81E51: invalid opcode 81
+2088:BB2BDA3A: invalid opcode 58
+208C:62D42BF2: invalid opcode 242
+2090:0890218C: invalid opcode 140
+2094:4403E96B: invalid opcode 107
+2098:A0AD9DE0: invalid opcode 224
+209C:4DC01836: invalid opcode 54
+20A0:6D6BEA20: ret
+
+20A4:434D9D46: invalid opcode 70
+20A8:3EC8CDF0: invalid opcode 240
+20AC:8AAE1395: invalid opcode 149
+20B0:267EE5F0: invalid opcode 240
+20B4:AB3EAE0B: jmp.E_INVALID -> 124472872888441740088135034930724864.000000
+20C0:33271485: invalid opcode 133
+20C4:AC3368E9: invalid opcode 233
+20C8:3378C6BF: invalid opcode 191
+20CC:E46A4AE8: invalid opcode 232
+20D0:E1687AA8: invalid opcode 168
+20D4:EA90F5FC: invalid opcode 252
+20D8:9D2141CD: invalid opcode 205
+20DC:DBE05F55: invalid opcode 85
+20E0:8C4409AA: invalid opcode 170
+20E4:B7CA0625: invalid opcode 37
+20E8:3740FF7A: invalid opcode 122
+20EC:B80C036B: invalid opcode 107
+20F0:87BA4545: invalid opcode 69
+20F4:CB55C717: ror.128 [rParam+0x55], 0xCB
+20F8:C35A2D26: invalid opcode 38
+20FC:05EB286B: invalid opcode 107
+2100:BD224B77: invalid opcode 119
+2104:C11702A5: invalid opcode 165
+2108:1FF67769: invalid opcode 105
+210C:C9A72431: invalid opcode 49
+2110:63FA60D4: invalid opcode 212
+2114:6A54C211: and.32 [rParam+0x54] &= E_INVALID
+2118:B1BA790A: cmp.16 [[rParam+0xBA]], [rParam+0xB1]
+211C:D7C0AC31: invalid opcode 49
+2120:F5081650: invalid opcode 80
+2124:16897A21: invalid opcode 33
+2128:7FB629E5: invalid opcode 229
+212C:3D086011: and.8 [rParam+0x8] &= [rCall+[rParam+0x3D]]
+2130:2AF4D7F0: invalid opcode 240
+2134:C4F278BE: invalid opcode 190
+2138:722CD0EC: invalid opcode 236
+213C:F8198D43: invalid opcode 67
+2140:1E6039D5: invalid opcode 213
+2144:2B925402: wait [rCode+[rParam+0x2B]]
+2148:02CA84BD: invalid opcode 189
+214C:0CFACEAA: invalid opcode 170
+2150:ED5B7AB9: invalid opcode 185
+2154:AA1C1077: invalid opcode 119
+2158:C93BDA0E: sub.32 [rCode+[rParam+0x3B]] -= E_INVALID
+215C:36601A21: invalid opcode 33
+2160:8105E033: invalid opcode 51
+2164:6DA1199B: invalid opcode 155
+2168:3911E39E: invalid opcode 158
+216C:F55B5EE0: invalid opcode 224
+2170:0467AAB5: invalid opcode 181
+2174:B8B58C06: invalid opcode 6
+2178:0A52D320: ret
+
+217C:75D7D77D: invalid opcode 125
+2180:CB69D5C5: invalid opcode 197
+2184:95CE4EE6: invalid opcode 230
+2188:9510F9F6: invalid opcode 246
+218C:F9C8AFBA: invalid opcode 186
+2190:FF65BC07: lock
+2194:AB8328C4: invalid opcode 196
+2198:D7266838: invalid opcode 56
+219C:A08B3F14: shrx.128 [rText+[rParam+0x8B]] >>= [rParam+0xA0]
+21A0:EDAFE259: invalid opcode 89
+21A4:204168F9: invalid opcode 249
+21A8:2AB8426A: invalid opcode 106
+21AC:4B3640E9: invalid opcode 233
